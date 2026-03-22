@@ -1,0 +1,25 @@
+# GoodBooks - QA Testing Dependencies
+# Install: pip install -r requirements-test.txt
+
+# Core testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-html>=3.2.0
+pytest-xdist>=3.5.0
+
+# Flask testing
+flask-testing>=0.8.1
+werkzeug>=2.3.0
+
+# API testing
+requests>=2.31.0
+
+# Browser automation - Selenium
+selenium>=4.15.0
+webdriver-manager>=4.0.0
+
+# Browser automation - Playwright
+playwright>=1.40.0
+
+# Load testing (optional - JMeter is standalone)
+locust>=2.18.0

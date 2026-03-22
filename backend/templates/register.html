@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Register - GoodBooks{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="page-header" style="margin-bottom: 2rem;">
+        <h1>Create Account</h1>
+        <p>Join GoodBooks to get personalized book recommendations</p>
+    </div>
+
+    <form method="post">
+        <div class="form-group">
+            <label for="username" class="form-label">Username *</label>
+            <input type="text" id="username" name="username" class="form-input" required autofocus>
+        </div>
+
+        <div class="form-group">
+            <label for="email" class="form-label">Email *</label>
+            <input type="email" id="email" name="email" class="form-input" required>
+            <small style="color: var(--text-secondary); font-size: 0.875rem;">Required for password recovery</small>
+        </div>
+
+        <div class="form-group">
+            <label for="name" class="form-label">Full Name</label>
+            <input type="text" id="name" name="name" class="form-input">
+        </div>
+
+        <div class="form-group">
+            <label for="password" class="form-label">Password *</label>
+            <input type="password" id="password" name="password" class="form-input" required>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Register</button>
+            <a href="/login" class="btn btn-secondary">Already have an account?</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

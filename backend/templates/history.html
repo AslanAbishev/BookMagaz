@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase History - GoodBooks{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Purchase History</h1>
+    <p>View all your past purchases</p>
+</div>
+
+{% if history_items %}
+<div class="profile-section">
+    {% for item in history_items %}
+    <div class="history-item">
+        <div class="history-item-image">
+            {% if item.book.image_url %}
+            <img src="{{ item.book.image_url }}" alt="{{ item.book.title or 'Book cover' }}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div style="display: none; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 700;">
+                {{ item.book.title[0] if item.book.title else '📖' }}
+            </div>
+            {% else %}
+            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 700;">
+                {{ item.book.title[0] if item.book.title else '📖' }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="history-item-info">
+            <h4 class="history-item-title">
+                <a href="/product/{{ item.book.book_id }}" style="text-decoration: none; color: inherit;">
+                    {{ item.book.title or 'Untitled' }}
+                </a>
+            </h4>
+            <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">{{ item.book.authors or 'Unknown Author' }}</p>
+            <p style="color: var(--primary-color); font-weight: 600; margin-bottom: 0.5rem;">
+                ${{ "%.2f"|format(item.book.price) if item.book.price else '9.99' }}
+            </p>
+            <p class="history-item-date">
+                Purchased: {{ item.purchased_at.strftime('%B %d, %Y at %I:%M %p') if item.purchased_at else 'Unknown date' }}
+            </p>
+        </div>
+        <div>
+            <a href="/product/{{ item.book.book_id }}" class="btn btn-secondary btn-sm">View Details</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <h3>No purchase history</h3>
+    <p>Start exploring books and make your first purchase!</p>
+    <a href="/" class="btn btn-primary" style="margin-top: 1rem;">Browse Books</a>
+</div>
+{% endif %}
+{% endblock %}

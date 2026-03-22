@@ -1,0 +1,120 @@
+# -------------------------
+# Python / Flask Ignored Files
+# -------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+env/
+venv/
+ENV/
+.venv/
+
+# Local config
+instance/
+*.local
+*.env
+
+# Flask cache
+flask_session/
+*.log
+*.tmp
+
+# -------------------------
+# OS Generated Files
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# IDE Files
+# -------------------------
+.vscode/
+.idea/
+
+# -------------------------
+# MongoDB dump/output
+# -------------------------
+dump/
+*.bson
+*.metadata.json
+
+# -------------------------
+# Data Files (LARGE)
+# -------------------------
+data/
+
+# Explicitly ignore your large file
+data/sim_cache.pkl
+
+# Ignore dataset caches
+dataset_cache/
+.cache/
+*.cache
+
+# -------------------------
+# Model files
+# -------------------------
+*.h5
+*.pt
+*.pth
+*.onnx
+*.weights
+
+# -------------------------
+# Jupyter Notebooks (optional)
+# -------------------------
+.ipynb_checkpoints/
+
+# -------------------------
+# Docker
+# -------------------------
+/docker-data/
+/data/db/
+*.pid
+
+# -------------------------
+# Node / Frontend (if added later)
+# -------------------------
+node_modules/
+
+# -------------------------
+# Logs
+# -------------------------
+*.log
+logs/
+uwsgi.log
+
+# -------------------------
+# Compiled Files
+# -------------------------
+*.so
+*.dll
+*.dylib
+
+# -------------------------
+# Misc
+# -------------------------
+*.swp
+*.swo
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual env
+venv/
+
+# Test results
+*.json
+
+# Data / DB
+*.db
+*.sqlite
+dataset/
+data/
+
+# OS
+.DS_Store
+Thumbs.db

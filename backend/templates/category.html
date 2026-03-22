@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category }} - GoodBooks{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ category }} Books</h1>
+    <p>Browse books in this category</p>
+</div>
+
+{% if books %}
+<div class="books-grid">
+    {% for book in books %}
+    <a href="/product/{{ book.book_id }}" class="book-card">
+        <div class="book-image">
+            {% if book.image_url %}
+            <img src="{{ book.image_url }}" alt="{{ book.title or 'Book cover' }}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="book-image-placeholder" style="display: none;">
+                {{ book.title[0] if book.title else '📖' }}
+            </div>
+            {% else %}
+            <div class="book-image-placeholder">
+                {{ book.title[0] if book.title else '📖' }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="book-info">
+            <h3 class="book-title">{{ book.title or 'Untitled' }}</h3>
+            <p class="book-author">{{ book.authors or 'Unknown Author' }}</p>
+            <div class="book-meta">
+                <div class="book-rating">
+                    ⭐ {{ "%.1f"|format(book.average_rating) if book.average_rating else 'N/A' }}
+                </div>
+                <div class="book-price">${{ "%.2f"|format(book.price) if book.price else '9.99' }}</div>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <h3>No books found in this category</h3>
+    <p>Try browsing other categories.</p>
+    <a href="/" class="btn btn-primary" style="margin-top: 1rem;">Back to Home</a>
+</div>
+{% endif %}
+{% endblock %}

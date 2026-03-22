@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}GoodBooks - Discover Your Next Read{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Discover Your Next Favorite Book</h1>
+    <p>Personalized recommendations powered by collaborative filtering</p>
+</div>
+
+<!-- Search Section -->
+<div class="search-section">
+    <form class="search-form" id="searchForm" onsubmit="return false;">
+        <input type="text" name="q" placeholder="Search by title, author, or keywords..." class="search-input" id="searchInput">
+        <select name="category" class="category-filter" id="categoryFilter">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+                <option value="{{ cat }}">{{ cat }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" class="btn btn-primary" id="searchButton">Search</button>
+    </form>
+</div>
+
+<!-- Popular Books Section -->
+{% if popular_books %}
+<div class="featured-section">
+    <h2 class="section-title">⭐ Popular Books</h2>
+    <div class="popular-books">
+        {% for book in popular_books %}
+        <a href="/product/{{ book.book_id }}" class="book-card">
+            <div class="book-image">
+                {% if book.image_url %}
+                <img src="{{ book.image_url }}" alt="{{ book.title or 'Book cover' }}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="book-image-placeholder" style="display: none;">
+                    {{ book.title[0] if book.title else '📖' }}
+                </div>
+                {% else %}
+                <div class="book-image-placeholder">
+                    {{ book.title[0] if book.title else '📖' }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="book-info">
+                <h3 class="book-title">{{ book.title or 'Untitled' }}</h3>
+                <p class="book-author">{{ book.authors or 'Unknown Author' }}</p>
+                <div class="book-meta">
+                    <div class="book-rating">
+                        ⭐ {{ "%.1f"|format(book.average_rating) if book.average_rating else 'N/A' }}
+                    </div>
+                    <div class="book-price">${{ "%.2f"|format(book.price) if book.price else '9.99' }}</div>
+                </div>
+                {% if book.category %}
+                <span class="book-category">{{ book.category }}</span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Book Catalog -->
+<h2 class="section-title">📚 Browse Catalog</h2>
+<div class="books-grid" id="booksGrid">
+    {% if books %}
+        {% for book in books %}
+        <a href="/product/{{ book.book_id }}" class="book-card" data-book-id="{{ book.book_id }}">
+            <div class="book-image">
+                {% if book.image_url %}
+                <img src="{{ book.image_url }}" alt="{{ book.title or 'Book cover' }}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="book-image-placeholder" style="display: none;">
+                    {{ book.title[0] if book.title else '📖' }}
+                </div>
+                {% else %}
+                <div class="book-image-placeholder">
+                    {{ book.title[0] if book.title else '📖' }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="book-info">
+                <h3 class="book-title">{{ book.title or 'Untitled' }}</h3>
+                <p class="book-author">{{ book.authors or 'Unknown Author' }}</p>
+                <div class="book-meta">
+                    <div class="book-rating">
+                        ⭐ {{ "%.1f"|format(book.average_rating) if book.average_rating else 'N/A' }}
+                    </div>
+                    <div class="book-price">${{ "%.2f"|format(book.price) if book.price else '9.99' }}</div>
+                </div>
+                {% if book.category %}
+                <span class="book-category">{{ book.category }}</span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state" style="grid-column: 1 / -1;">
+            <h3>No books found</h3>
+            <p>Try adjusting your search criteria.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing search...');
+        
+        // Enhanced search with AJAX
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const booksGrid = document.getElementById('booksGrid');
+        
+        console.log('Elements found:', {
+            searchForm: !!searchForm,
+            searchInput: !!searchInput,
+            categoryFilter: !!categoryFilter,
+            booksGrid: !!booksGrid
+        });
+        
+        if (!booksGrid) {
+            console.error('booksGrid element not found!');
+            return;
+        }
+        
+        function performSearch(query, category) {
+            console.log('performSearch called with:', {query: query, category: category, booksGrid: !!booksGrid});
+            
+            if (!booksGrid) {
+                console.error('booksGrid is null! Cannot perform search.');
+                alert('Error: Cannot find books grid. Please refresh the page.');
+                return;
+            }
+            
+            // Show loading state
+            booksGrid.innerHTML = '<div class="loading" style="grid-column: 1 / -1; padding: 2rem; text-align: center; width: 100%;">Searching...</div>';
+            
+            // Build URL
+            let url = '/api/search?limit=50';
+            if (query && query.trim()) {
+                url += '&q=' + encodeURIComponent(query.trim());
+            }
+            if (category && category.trim()) {
+                url += '&category=' + encodeURIComponent(category.trim());
+            }
+            
+            console.log('Fetching from URL:', url);
+            
+            fetch(url)
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error('HTTP error! status: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(books => {
+                    console.log('Received books:', books);
+                    console.log('Number of books:', Array.isArray(books) ? books.length : 'not an array');
+                    
+                    // Handle error response
+                    if (books && typeof books === 'object' && !Array.isArray(books) && books.error) {
+                        booksGrid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h3>Search Error</h3><p>' + books.error + '</p></div>';
+                        return;
+                    }
+                    
+                    // Handle empty results
+                    if (!books || !Array.isArray(books) || books.length === 0) {
+                        booksGrid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h3>No books found</h3><p>Try different search terms or browse all books.</p><a href="/" class="btn btn-primary" style="margin-top: 1rem;">Browse All Books</a></div>';
+                        return;
+                    }
+                    
+                    console.log('Displaying', books.length, 'books');
+                    
+                // Display results
+                booksGrid.innerHTML = books.map(function(book) {
+                    const firstChar = book.title ? book.title.charAt(0).toUpperCase() : '📖';
+                    const title = book.title || 'Untitled';
+                    const authors = book.authors || 'Unknown Author';
+                    const rating = book.average_rating ? book.average_rating.toFixed(1) : 'N/A';
+                    const price = book.price ? book.price.toFixed(2) : '9.99';
+                    const categoryBadge = book.category ? '<span class="book-category">' + book.category + '</span>' : '';
+                    const bookId = book.book_id || 0;
+                    const imageUrl = book.image_url || '';
+                    
+                    var imageHtml = imageUrl ? 
+                        '<img src="' + imageUrl + '" alt="' + title + '" onerror="this.onerror=null; this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">' +
+                        '<div class="book-image-placeholder" style="display: none;">' + firstChar + '</div>' :
+                        '<div class="book-image-placeholder">' + firstChar + '</div>';
+                    
+                    return '<a href="/product/' + bookId + '" class="book-card">' +
+                        '<div class="book-image">' + imageHtml + '</div>' +
+                        '<div class="book-info">' +
+                        '<h3 class="book-title">' + title + '</h3>' +
+                        '<p class="book-author">' + authors + '</p>' +
+                        '<div class="book-meta">' +
+                        '<div class="book-rating">⭐ ' + rating + '</div>' +
+                        '<div class="book-price">$' + price + '</div>' +
+                        '</div>' +
+                        categoryBadge +
+                        '</div>' +
+                        '</a>';
+                }).join('');
+                    
+                    console.log('Books displayed successfully!');
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    booksGrid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><h3>Search Error</h3><p>Unable to search. Please try again.</p><p style="font-size: 0.9rem; color: var(--text-secondary);">' + error.message + '</p></div>';
+                });
+        }
+        
+        // Add click listener to search button (primary method)
+        const searchButton = document.getElementById('searchButton');
+        if (searchButton) {
+            console.log('Search button found, adding click listener');
+            searchButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Search button clicked!');
+                const query = searchInput ? searchInput.value : '';
+                const category = categoryFilter ? categoryFilter.value : '';
+                console.log('Query:', query, 'Category:', category);
+                if (booksGrid) {
+                    performSearch(query, category);
+                } else {
+                    console.error('booksGrid is null!');
+                    alert('Error: Cannot find books grid. Please refresh the page.');
+                }
+                return false;
+            });
+        } else {
+            console.error('Search button not found!');
+        }
+        
+        // Also add submit listener to form as backup
+        if (searchForm) {
+            console.log('Search form found, adding submit listener');
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Form submitted!');
+                const query = searchInput ? searchInput.value : '';
+                const category = categoryFilter ? categoryFilter.value : '';
+                console.log('Query:', query, 'Category:', category);
+                if (booksGrid) {
+                    performSearch(query, category);
+                } else {
+                    console.error('booksGrid is null when trying to search!');
+                }
+                return false;
+            });
+        } else {
+            console.error('Search form not found!');
+        }
+        
+        // Search when category changes
+        if (categoryFilter) {
+            categoryFilter.addEventListener('change', function() {
+                const query = searchInput ? searchInput.value : '';
+                const category = this.value;
+                performSearch(query, category);
+            });
+        }
+    });
+</script>
+{% endblock %}

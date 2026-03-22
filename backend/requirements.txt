@@ -1,0 +1,7 @@
+flask
+pymongo
+pandas
+numpy
+scikit-learn
+python-dotenv
+werkzeug

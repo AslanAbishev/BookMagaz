@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GoodBooks - Your Book Recommendation Platform{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">📚 GoodBooks</a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                {% if session.username %}
+                    <a href="/profile">Profile</a>
+                    <a href="/history">Purchase History</a>
+                    <div class="nav-user">
+                        <span class="user-info">Hello, {{ session.username }}</span>
+                        <a href="/logout" class="btn btn-secondary btn-sm">Logout</a>
+                    </div>
+                {% else %}
+                    <a href="/login" class="btn btn-secondary btn-sm">Login</a>
+                    <a href="/register" class="btn btn-primary btn-sm">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">
+                        <span>{{ message }}</span>
+                        <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; font-size: 1.2rem; color: inherit;">×</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer style="background-color: var(--surface-color); padding: 2rem; margin-top: 4rem; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-secondary);">
+        <p>&copy; 2024 GoodBooks. Your personalized book recommendation platform.</p>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

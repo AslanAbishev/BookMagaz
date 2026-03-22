@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} - GoodBooks{% endblock %}
+
+{% block content %}
+<div class="product-container">
+    <div class="product-image">
+        {% if book.image_url %}
+        <img src="{{ book.image_url }}" alt="{{ book.title or 'Book cover' }}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="book-image-placeholder" style="display: none;">
+            {{ book.title[0] if book.title else '📖' }}
+        </div>
+        {% else %}
+        <div class="book-image-placeholder">
+            {{ book.title[0] if book.title else '📖' }}
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="product-details">
+        <h1 class="product-title">{{ book.title or 'Untitled' }}</h1>
+        <p class="product-author">By {{ book.authors or 'Unknown Author' }}</p>
+        
+        {% if book.description %}
+        <div class="product-description">
+            <p>{{ book.description }}</p>
+        </div>
+        {% endif %}
+
+        <div class="product-stats">
+            <div class="stat-item">
+                <span class="stat-label">Rating</span>
+                <span class="stat-value">⭐ {{ "%.2f"|format(book.average_rating) if book.average_rating else 'N/A' }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Ratings Count</span>
+                <span class="stat-value">{{ "{:,}".format(book.ratings_count) if book.ratings_count else '0' }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Price</span>
+                <span class="stat-value" style="color: var(--primary-color);">${{ "%.2f"|format(book.price) if book.price else '9.99' }}</span>
+            </div>
+            {% if book.category %}
+            <div class="stat-item">
+                <span class="stat-label">Category</span>
+                <span class="stat-value">{{ book.category }}</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if session.user_id %}
+        <div class="product-actions">
+            <!-- Rating Section -->
+            <div class="rating-input">
+                <label style="margin-right: 0.5rem; font-weight: 500;">Rate this book:</label>
+                <div class="star-rating" id="starRating">
+                    {% for i in range(1, 6) %}
+                        <span class="star {% if user_rating and user_rating >= i %}active{% endif %}" 
+                              data-rating="{{ i }}" style="cursor: pointer; transition: all 0.2s;">⭐</span>
+                    {% endfor %}
+                </div>
+                {% if user_rating %}
+                <span style="margin-left: 0.5rem; color: var(--text-secondary);">(You rated: {{ "%.1f"|format(user_rating) }})</span>
+                {% endif %}
+            </div>
+
+            <button class="like-btn {% if user_liked %}liked{% endif %}" id="likeBtn" data-book-id="{{ book.book_id }}">
+                <span>❤️</span>
+                <span>{{ 'Unlike' if user_liked else 'Like' }}</span>
+            </button>
+
+            <button class="btn btn-success" id="purchaseBtn" data-book-id="{{ book.book_id }}">
+                🛒 Purchase
+            </button>
+        </div>
+        {% else %}
+        <div class="product-actions">
+            <a href="/login" class="btn btn-primary">Login to Rate & Purchase</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if similar_books %}
+<div>
+    <h2 class="section-title">Similar Books</h2>
+    <div class="similar-books">
+        {% for similar_book in similar_books %}
+        <a href="/product/{{ similar_book.book_id }}" class="book-card">
+            <div class="book-image">
+                {% if similar_book.image_url %}
+                <img src="{{ similar_book.image_url }}" alt="{{ similar_book.title or 'Book cover' }}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="book-image-placeholder" style="display: none;">
+                    {{ similar_book.title[0] if similar_book.title else '📖' }}
+                </div>
+                {% else %}
+                <div class="book-image-placeholder">
+                    {{ similar_book.title[0] if similar_book.title else '📖' }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="book-info">
+                <h3 class="book-title">{{ similar_book.title or 'Untitled' }}</h3>
+                <p class="book-author">{{ similar_book.authors or 'Unknown Author' }}</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if session.user_id %}
+<script>
+    const bookId = {{ book.book_id }};
+    
+    // Star rating
+    const stars = document.querySelectorAll('.star');
+    stars.forEach((star, index) => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.getAttribute('data-rating'));
+            console.log('Rating clicked:', rating);
+            
+            // Update UI immediately for better UX
+            stars.forEach((s, idx) => {
+                if (idx + 1 <= rating) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+            
+            // Send rating to server
+            fetch('/api/rate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    book_id: bookId,
+                    rating: rating
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to save rating');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'ok') {
+                    console.log('Rating saved successfully');
+                    // Show feedback
+                    const ratingText = document.querySelector('.rating-input span[style*="margin-left"]');
+                    if (ratingText) {
+                        ratingText.textContent = '(You rated: ' + rating + '.0)';
+                    } else {
+                        const label = document.querySelector('.rating-input label');
+                        const feedback = document.createElement('span');
+                        feedback.style.cssText = 'margin-left: 0.5rem; color: var(--success-color); font-weight: 500;';
+                        feedback.textContent = '✓ Saved!';
+                        label.parentNode.insertBefore(feedback, label.nextSibling);
+                        setTimeout(() => {
+                            feedback.textContent = '(You rated: ' + rating + '.0)';
+                            feedback.style.color = 'var(--text-secondary)';
+                        }, 2000);
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to save rating');
+                }
+            })
+            .catch(error => {
+                console.error('Rating error:', error);
+                alert('Failed to save rating. Please try again.');
+                // Revert UI
+                location.reload();
+            });
+        });
+        
+        // Hover effect for better UX
+        star.addEventListener('mouseenter', function() {
+            const hoverRating = parseInt(this.getAttribute('data-rating'));
+            stars.forEach((s, idx) => {
+                if (idx + 1 <= hoverRating) {
+                    s.style.opacity = '1';
+                    s.style.transform = 'scale(1.1)';
+                } else {
+                    s.style.opacity = '0.5';
+                }
+            });
+        });
+        
+        star.addEventListener('mouseleave', function() {
+            stars.forEach((s) => {
+                s.style.opacity = '';
+                s.style.transform = '';
+            });
+        });
+    });
+
+    // Like button
+    document.getElementById('likeBtn').addEventListener('click', function() {
+        const isLiked = this.classList.contains('liked');
+        const action = isLiked ? 'unlike' : 'like';
+        
+        fetch('/api/like', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                book_id: bookId,
+                action: action
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                if (action === 'like') {
+                    this.classList.add('liked');
+                    this.innerHTML = '<span>❤️</span><span>Unlike</span>';
+                } else {
+                    this.classList.remove('liked');
+                    this.innerHTML = '<span>❤️</span><span>Like</span>';
+                }
+            }
+        });
+    });
+
+    // Purchase button
+    document.getElementById('purchaseBtn').addEventListener('click', function() {
+        if (confirm('Record this purchase?')) {
+            fetch('/api/purchase', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    book_id: bookId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    alert('Purchase recorded! Check your purchase history.');
+                }
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}
