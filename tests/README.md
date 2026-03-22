@@ -4,8 +4,9 @@
 
 ### 1. Install dependencies
 ```bash
-pip install -r requirements-test.txt
-playwright install chromium   # For E2E tests
+pip install pytest flask-testing requests
+# Full: pip install -r requirements-test.txt
+# E2E: playwright install chromium
 ```
 
 ### 2. Start MongoDB
@@ -16,33 +17,43 @@ docker-compose up -d
 
 ### 3. Run tests
 ```bash
-# Unit + API tests (no app needed for most)
-cd backend && python -m pytest ../tests/ --ignore=../tests/e2e/ -v
+# Option A: Use the run script
+.\run_tests.ps1        # PowerShell
+.\run_tests.bat        # Command Prompt
 
-# E2E tests (app must be running)
-# Terminal 1: python backend/app.py
-# Terminal 2: pytest tests/e2e/ -v
+# Option B: Run directly
+python -m pytest tests/ -v --ignore=tests/e2e
+
+# Option C: Run from project root
+.\venv\Scripts\Activate.ps1
+python -m pytest tests/ -v --ignore=tests/e2e
 ```
 
-## Test Categories
+## Test Categories (by Risk Priority)
 
-| Directory/File | Type | Description |
-|----------------|------|-------------|
-| `test_auth.py` | Unit/Integration | Login, register, logout, forgot password |
-| `test_api.py` | API | Search, rate, like, purchase, categories |
-| `test_routes.py` | Integration | Page loads, redirects |
+| File | Priority | Description |
+|------|----------|-------------|
+| `test_auth.py` | P1 Critical | Login, register, logout, forgot password |
+| `test_api.py` | P2 High | Search, rate, like, purchase, categories |
+| `test_search.py` | P2 High | Search by text, category, combined |
+| `test_recommendations.py` | P2 High | Profile, recommendations, similar books |
+| `test_models.py` | P1/P2 | Data layer, categories |
+| `test_routes.py` | P3 Medium | Page loads, redirects |
 | `e2e/test_selenium.py` | E2E | Browser tests (Selenium) |
 | `e2e/test_playwright.py` | E2E | Browser tests (Playwright) |
+
+## Expected Results
+
+- **~34 tests** should pass (1 recommend API test is skipped - can hang with large data)
+- All P1 (Authentication) and P2 (API, Search) tests must pass
 
 ## Tools
 
 - **pytest** – Test runner
-- **Selenium** – Browser automation (Chrome)
-- **Playwright** – Browser automation (Chromium)
-- **Postman** – API collection in `../postman/`
-- **JMeter** – Load test in `../jmeter/`
+- **Postman** – `postman/GoodBooks_API_Collection.json`
+- **JMeter** – `jmeter/goodbooks_load_test.jmx`
+- **Selenium/Playwright** – E2E (optional)
 
 ## CI/CD
 
-Tests run automatically on push/PR to `main` via GitHub Actions.
-See `.github/workflows/test-pipeline.yml`.
+Tests run on push/PR to `main` via GitHub Actions (`.github/workflows/test-pipeline.yml`).
