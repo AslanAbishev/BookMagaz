@@ -231,4 +231,16 @@ jmeter -n -t jmeter/goodbooks_load_test.jmx -l results.jtl
 
 ---
 
+## 10. Assignment 2 Update
+
+Assignment 2 implementation details, filled tables, quality gates, metrics, and evidence are documented in [`docs/ASSIGNMENT_2_REPORT.md`](./ASSIGNMENT_2_REPORT.md).
+
+Key observed results from the latest non-E2E regression run on `2026-04-04`:
+- `68/68` tests passed
+- Full non-E2E runtime: `2.51 sec`
+- High-risk module automation coverage: `100%`
+- Evidence artifacts generated in [`docs/evidence/`](./evidence/)
+
+---
+
 *This document should be updated as the test strategy evolves.*

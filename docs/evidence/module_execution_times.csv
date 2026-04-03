@@ -1,0 +1,7 @@
+Module/Feature,Number of Test Cases,Total Execution Time (sec)
+tests/test_auth.py,20,2.891
+tests/test_api.py,20,2.156
+tests/test_models.py,8,0.447
+tests/test_recommendations.py,9,2.69
+tests/test_routes.py,7,2.655
+tests/test_search.py,4,2.123

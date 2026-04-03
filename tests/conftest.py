@@ -10,11 +10,13 @@ sys.path.insert(0, PROJECT_ROOT)
 sys.path.insert(0, os.path.join(PROJECT_ROOT, "backend"))
 
 import pytest
-from flask import Flask
 from pymongo import MongoClient
 
 # Test configuration
-os.environ.setdefault("MONGO_URI", "mongodb://localhost:27017/")
+os.environ.setdefault(
+    "MONGO_URI",
+    "mongodb://localhost:27017/?serverSelectionTimeoutMS=100&connectTimeoutMS=100&socketTimeoutMS=100",
+)
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 os.environ.setdefault("TESTING", "1")
 
@@ -29,7 +31,7 @@ def app():
     return flask_app
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def client(app):
     """Create test client."""
     return app.test_client()
