@@ -210,6 +210,7 @@ class TestRecommendationUtilities:
 
     def test_build_item_similarity_creates_cache_file(self, monkeypatch):
         """Similarity builder persists a pickled similarity matrix."""
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
         cache_file = DATA_DIR / "test_sim_cache.pkl"
         if cache_file.exists():
             try:
@@ -245,6 +246,7 @@ class TestRecommendationUtilities:
 
     def test_get_recommendations_returns_popular_books_for_cold_start(self, monkeypatch):
         """Cold-start users fall back to top-rated books when no ratings exist."""
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
         cache_file = DATA_DIR / "test_midterm_coldstart.pkl"
         cache_file.write_bytes(pickle.dumps(__import__("pandas").DataFrame()))
         monkeypatch.setattr(recommend, "CACHE_FILE", str(cache_file))
@@ -265,6 +267,7 @@ class TestRecommendationUtilities:
 
     def test_get_recommendations_combines_collaborative_and_content_scores(self, monkeypatch):
         """Recommendation ranking combines similarity, category, and author boosts."""
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
         cache_file = DATA_DIR / "test_midterm_hybrid.pkl"
         similarity = __import__("pandas").DataFrame(
             {
@@ -296,6 +299,7 @@ class TestRecommendationUtilities:
 
     def test_get_similar_books_uses_cache_and_content_boosts(self, monkeypatch):
         """Similar-book ranking combines cache similarity with content-based boosts."""
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
         cache_file = DATA_DIR / "test_midterm_similar.pkl"
         similarity = __import__("pandas").DataFrame(
             {
