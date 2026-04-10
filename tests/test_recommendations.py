@@ -17,6 +17,9 @@ import app as app_module
 import recommend
 from tests.helpers import CollectionStub
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
+
 
 class TestRecommendations:
     """Recommendation engine tests."""
@@ -207,7 +210,7 @@ class TestRecommendationUtilities:
 
     def test_build_item_similarity_creates_cache_file(self, monkeypatch):
         """Similarity builder persists a pickled similarity matrix."""
-        cache_file = Path("C:/Users/admin/OneDrive/Desktop/goodbooks_app/data/test_sim_cache.pkl")
+        cache_file = DATA_DIR / "test_sim_cache.pkl"
         if cache_file.exists():
             try:
                 cache_file.unlink()
@@ -242,7 +245,7 @@ class TestRecommendationUtilities:
 
     def test_get_recommendations_returns_popular_books_for_cold_start(self, monkeypatch):
         """Cold-start users fall back to top-rated books when no ratings exist."""
-        cache_file = Path("C:/Users/admin/OneDrive/Desktop/goodbooks_app/data/test_midterm_coldstart.pkl")
+        cache_file = DATA_DIR / "test_midterm_coldstart.pkl"
         cache_file.write_bytes(pickle.dumps(__import__("pandas").DataFrame()))
         monkeypatch.setattr(recommend, "CACHE_FILE", str(cache_file))
         db = SimpleNamespace(
@@ -262,7 +265,7 @@ class TestRecommendationUtilities:
 
     def test_get_recommendations_combines_collaborative_and_content_scores(self, monkeypatch):
         """Recommendation ranking combines similarity, category, and author boosts."""
-        cache_file = Path("C:/Users/admin/OneDrive/Desktop/goodbooks_app/data/test_midterm_hybrid.pkl")
+        cache_file = DATA_DIR / "test_midterm_hybrid.pkl"
         similarity = __import__("pandas").DataFrame(
             {
                 1: {1: 1.0, 2: 0.8, 3: 0.0},
@@ -293,7 +296,7 @@ class TestRecommendationUtilities:
 
     def test_get_similar_books_uses_cache_and_content_boosts(self, monkeypatch):
         """Similar-book ranking combines cache similarity with content-based boosts."""
-        cache_file = Path("C:/Users/admin/OneDrive/Desktop/goodbooks_app/data/test_midterm_similar.pkl")
+        cache_file = DATA_DIR / "test_midterm_similar.pkl"
         similarity = __import__("pandas").DataFrame(
             {
                 1: {1: 1.0, 2: 0.7, 3: 0.05},
