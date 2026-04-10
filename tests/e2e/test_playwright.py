@@ -59,3 +59,9 @@ class TestGoodBooksPlaywright:
         # Forgot password link
         forgot_link = page.get_by_text("Forgot Password", exact=False)
         assert forgot_link.count() > 0
+
+    def test_protected_profile_redirects_to_login(self, page, base_url):
+        """Unauthenticated users are redirected from profile to login."""
+        page.goto(f"{base_url}/profile")
+        page.wait_for_load_state("networkidle")
+        assert "/login" in page.url

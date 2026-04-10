@@ -1,0 +1,99 @@
+RUN 1
+EXIT=0
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\admin\OneDrive\Desktop\goodbooks_app
+configfile: pytest.ini
+plugins: cov-7.1.0, html-4.2.0, metadata-3.1.1, xdist-3.8.0
+collected 80 items
+
+tests\test_api.py .........................                              [ 31%]
+tests\test_auth.py ......................                                [ 58%]
+tests\test_models.py ........                                            [ 68%]
+tests\test_recommendations.py ..............                             [ 86%]
+tests\test_routes.py .......                                             [ 95%]
+tests\test_search.py ....                                                [100%]
+
+============================= 80 passed in 2.68s ==============================
+
+
+
+RUN 2
+EXIT=0
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\admin\OneDrive\Desktop\goodbooks_app
+configfile: pytest.ini
+plugins: cov-7.1.0, html-4.2.0, metadata-3.1.1, xdist-3.8.0
+collected 80 items
+
+tests\test_api.py .........................                              [ 31%]
+tests\test_auth.py ......................                                [ 58%]
+tests\test_models.py ........                                            [ 68%]
+tests\test_recommendations.py ..............                             [ 86%]
+tests\test_routes.py .......                                             [ 95%]
+tests\test_search.py ....                                                [100%]
+
+============================= 80 passed in 2.63s ==============================
+
+
+
+RUN 3
+EXIT=0
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\admin\OneDrive\Desktop\goodbooks_app
+configfile: pytest.ini
+plugins: cov-7.1.0, html-4.2.0, metadata-3.1.1, xdist-3.8.0
+collected 80 items
+
+tests\test_api.py .........................                              [ 31%]
+tests\test_auth.py ......................                                [ 58%]
+tests\test_models.py ........                                            [ 68%]
+tests\test_recommendations.py ..............                             [ 86%]
+tests\test_routes.py .......                                             [ 95%]
+tests\test_search.py ....                                                [100%]
+
+============================= 80 passed in 2.58s ==============================
+
+
+
+RUN 4
+EXIT=0
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\admin\OneDrive\Desktop\goodbooks_app
+configfile: pytest.ini
+plugins: cov-7.1.0, html-4.2.0, metadata-3.1.1, xdist-3.8.0
+collected 80 items
+
+tests\test_api.py .........................                              [ 31%]
+tests\test_auth.py ......................                                [ 58%]
+tests\test_models.py ........                                            [ 68%]
+tests\test_recommendations.py ..............                             [ 86%]
+tests\test_routes.py .......                                             [ 95%]
+tests\test_search.py ....                                                [100%]
+
+============================= 80 passed in 2.60s ==============================
+
+
+
+RUN 5
+EXIT=0
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\admin\OneDrive\Desktop\goodbooks_app
+configfile: pytest.ini
+plugins: cov-7.1.0, html-4.2.0, metadata-3.1.1, xdist-3.8.0
+collected 80 items
+
+tests\test_api.py .........................                              [ 31%]
+tests\test_auth.py ......................                                [ 58%]
+tests\test_models.py ........                                            [ 68%]
+tests\test_recommendations.py ..............                             [ 86%]
+tests\test_routes.py .......                                             [ 95%]
+tests\test_search.py ....                                                [100%]
+
+============================= 80 passed in 2.60s ==============================
+
+

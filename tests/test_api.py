@@ -49,6 +49,15 @@ class TestSearchAPI:
         assert rv.status_code == 200
         assert captured == {"text": "clean code", "category": None, "limit": 7}
 
+    def test_search_returns_500_when_backend_search_fails(self, client, monkeypatch):
+        """Search reports backend failures instead of crashing the route."""
+        monkeypatch.setattr(app_module, "search_books", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("search backend failed")))
+
+        rv = client.get("/api/search?q=python")
+
+        assert rv.status_code == 500
+        assert rv.get_json()["error"] == "search backend failed"
+
 
 class TestRateAPI:
     """Rating API tests - requires authentication."""
@@ -120,6 +129,16 @@ class TestRateAPI:
             "rating": 5.0,
         }
 
+    def test_rate_rejects_non_numeric_rating(self, client):
+        """Rating rejects injection-like or non-numeric payloads."""
+        with client.session_transaction() as session:
+            session["user_id"] = "user-7"
+
+        rv = client.post("/api/rate", json={"book_id": 3, "rating": "five<script>"})
+
+        assert rv.status_code == 400
+        assert rv.get_json()["error"] == "Invalid rating"
+
 
 class TestLikeAPI:
     """Like API tests."""
@@ -163,6 +182,29 @@ class TestLikeAPI:
 
         assert rv.status_code == 200
         assert interactions.docs == []
+
+    def test_like_repeated_submission_records_only_once(self, client, monkeypatch):
+        """Repeated like requests do not duplicate the same like interaction."""
+        stored_likes = []
+
+        def fake_check(db, user_id, book_id, interaction_type):
+            return {"user_id": user_id, "book_id": book_id, "interaction": interaction_type} if stored_likes else None
+
+        def fake_insert(db, user_id, book_id, interaction, rating=None):
+            stored_likes.append((user_id, book_id, interaction))
+
+        monkeypatch.setattr(app_module, "check_user_interaction", fake_check)
+        monkeypatch.setattr(app_module, "insert_interaction", fake_insert)
+
+        with client.session_transaction() as session:
+            session["user_id"] = "user-1"
+
+        first = client.post("/api/like", json={"book_id": 5, "action": "like"})
+        second = client.post("/api/like", json={"book_id": 5, "action": "like"})
+
+        assert first.status_code == 200
+        assert second.status_code == 200
+        assert stored_likes == [("user-1", 5, "like")]
 
 
 class TestPurchaseAPI:
@@ -263,6 +305,25 @@ class TestInteractionAPI:
             "rating": 4,
         }
 
+    def test_interact_defaults_missing_interaction_to_view(self, client, monkeypatch):
+        """Missing interaction type defaults to a view event."""
+        captured = {}
+        monkeypatch.setattr(
+            app_module,
+            "insert_interaction",
+            lambda db, user_id, book_id, interaction, rating=None: captured.update(
+                {"user_id": user_id, "book_id": book_id, "interaction": interaction, "rating": rating}
+            ),
+        )
+
+        with client.session_transaction() as session:
+            session["user_id"] = "user-12"
+
+        rv = client.post("/api/interact", json={"book_id": 99})
+
+        assert rv.status_code == 200
+        assert captured == {"user_id": "user-12", "book_id": 99, "interaction": "view", "rating": None}
+
     def test_user_interactions_serializes_object_ids_and_dates(self, client, monkeypatch):
         """User interactions endpoint returns JSON-safe values."""
         monkeypatch.setattr(
@@ -287,6 +348,13 @@ class TestInteractionAPI:
         payload = rv.get_json()
         assert payload[0]["_id"] == "507f1f77bcf86cd799439011"
         assert payload[0]["timestamp"] == "2026-04-04T09:30:00"
+
+    def test_user_interactions_requires_authentication(self, client):
+        """Restricted interaction history cannot be fetched anonymously."""
+        rv = client.get("/api/user/interactions")
+
+        assert rv.status_code == 401
+        assert rv.get_json()["error"] == "Not authenticated"
 
 
 class TestBooksAPI:

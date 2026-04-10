@@ -148,6 +148,21 @@ class TestRegistration:
         assert created["name"] == "New User"
         assert created["hashed_password"] != "testpass123"
 
+    def test_register_rejects_injection_like_email(self, client):
+        """Registration rejects malformed email values with special characters."""
+        rv = client.post(
+            "/register",
+            data={
+                "username": "newuser",
+                "password": "testpass123",
+                "email": "bad<script>@example",
+                "name": "Injected",
+            },
+        )
+
+        assert rv.status_code == 200
+        assert b"valid email address" in rv.data.lower()
+
 
 class TestLogin:
     """Login flow tests."""
@@ -311,3 +326,19 @@ class TestResetPassword:
         assert "/login" in rv.headers["Location"]
         assert updated["user_id"] == user_id
         assert updated["hashed_password"] != "secret123"
+
+    def test_reset_password_rejects_empty_password(self, client, monkeypatch):
+        """Reset flow rejects skipped required password input."""
+        monkeypatch.setattr(
+            app_module,
+            "get_user_by_reset_token",
+            lambda db, token: {"_id": ObjectId(), "email": "reader@example.com"},
+        )
+
+        rv = client.post(
+            "/reset-password/good-token",
+            data={"password": "", "confirm_password": ""},
+        )
+
+        assert rv.status_code == 200
+        assert b"password is required" in rv.data.lower()
