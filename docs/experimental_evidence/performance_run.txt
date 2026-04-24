@@ -1,0 +1,17 @@
+GoodBooks experimental performance run
+
+home_page [expected]: avg=1.08ms p95=1.25ms throughput=795.79 rps errors=0
+home_page [stress]: avg=0.47ms p95=0.54ms throughput=2043.41 rps errors=0
+home_page [extreme]: avg=0.46ms p95=0.6ms throughput=2083.97 rps errors=0
+search_api [expected]: avg=0.22ms p95=0.25ms throughput=4239.26 rps errors=0
+search_api [stress]: avg=0.21ms p95=0.22ms throughput=4494.44 rps errors=0
+search_api [extreme]: avg=0.23ms p95=0.38ms throughput=3991.1 rps errors=0
+recommend_api [expected]: avg=1.2ms p95=1.36ms throughput=812.55 rps errors=0
+recommend_api [stress]: avg=0.76ms p95=0.87ms throughput=1272.43 rps errors=0
+recommend_api [extreme]: avg=0.76ms p95=0.92ms throughput=1265.82 rps errors=0
+product_page [expected]: avg=1.09ms p95=1.23ms throughput=898.69 rps errors=0
+product_page [stress]: avg=0.7ms p95=0.81ms throughput=1372.93 rps errors=0
+product_page [extreme]: avg=0.7ms p95=0.81ms throughput=1375.68 rps errors=0
+profile_page [expected]: avg=1.68ms p95=2.2ms throughput=585.44 rps errors=0
+profile_page [stress]: avg=1.01ms p95=1.14ms throughput=966.59 rps errors=0
+profile_page [extreme]: avg=0.99ms p95=1.11ms throughput=984.05 rps errors=0

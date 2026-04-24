@@ -118,3 +118,8 @@ data/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local assignment working copies / temp experiment sandboxes
+.tmp_experiments/
+docs/*copy.docx
+docs/*Filled.docx

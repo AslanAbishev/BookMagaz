@@ -1,0 +1,7 @@
+GoodBooks chaos experiment run
+
+search_api: fault=500 graceful=no recovery=200 in 0.44ms
+recommend_api: fault=500 graceful=no recovery=200 in 9.01ms
+product_page: fault=500 graceful=no recovery=200 in 12.51ms
+profile_page: fault=302 graceful=yes recovery=200 in 10.06ms
+admin_rebuild: fault=200 graceful=yes recovery=200 in 4.46ms

@@ -1,0 +1,6 @@
+timestamp,scenario,fault,fault_status_code,graceful_degradation,fault_duration_ms,recovery_status_code,recovery_time_ms,recovered_after_fault
+2026-04-25T01:12:28,search_api,search backend raises RuntimeError,500,no,1.66,200,0.44,yes
+2026-04-25T01:12:28,recommend_api,recommendation engine raises RuntimeError,500,no,1.51,200,9.01,yes
+2026-04-25T01:12:28,product_page,book lookup raises RuntimeError,500,no,1.6,200,12.51,yes
+2026-04-25T01:12:28,profile_page,user profile missing during active session,302,yes,1.05,200,10.06,yes
+2026-04-25T01:12:28,admin_rebuild,similarity rebuild raises RuntimeError,200,yes,0.33,200,4.46,yes

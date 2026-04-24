@@ -1,0 +1,10 @@
+GoodBooks mutation experiment run
+Killed mutants: 4/6
+Mutation score: 66.67%
+
+M1 killed: Remove lowercase normalization when creating a user
+M2 killed: Weaken rating validation by replacing OR with AND
+M3 killed: Invert duplicate-like guard
+M4 survived: Break cold-start recommendation branch
+M5 survived: Make similarity threshold unrealistically strict
+M6 killed: Disable category filter participation in search queries
