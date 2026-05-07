@@ -325,6 +325,66 @@ Artifacts:
 - Standardize API fault responses into JSON error envelopes instead of raw 500 pages.
 - Consider fallback behavior for recommendation failures so the profile and recommendation routes can degrade to popular books rather than failing hard.
 
+## Database Chaos / Fault Injection Extension
+
+The original chaos section focused on application-level failures. After the
+database-specific feedback, a separate DB fault-injection pass was added to
+target failures in collection operations such as `find`, `find_one`,
+`distinct`, and `count_documents`.
+
+### Execution
+
+```powershell
+venv\Scripts\python.exe scripts\experimental_database_chaos.py
+```
+
+### Database Chaos Evidence
+
+- `docs/experimental_evidence/database_chaos_results.csv`
+- `docs/experimental_evidence/database_chaos_results.json`
+- `docs/experimental_evidence/database_chaos_run.txt`
+
+### Database Chaos Plan
+
+| Scenario | DB fault injected | Expected resilience behavior |
+| --- | --- | --- |
+| Home page books query | `db.books.find` raises `AutoReconnect` | Route should fail in a controlled way and recover next request |
+| Categories API | `db.books.distinct` raises `ServerSelectionTimeoutError` | Category lookup should degrade gracefully to an empty response |
+| Search API | `db.books.find` raises `AutoReconnect` | Search should fall back to an empty result set instead of 500 |
+| User interactions API | `db.interactions.find` raises `AutoReconnect` | History lookup fault should be observable and recover cleanly |
+| Login lookup | `db.users.find_one` raises `ServerSelectionTimeoutError` | Authentication fault should be observable and recover cleanly |
+| Admin rebuild DB count | `db.interactions.count_documents` raises `AutoReconnect` | Admin endpoint should surface a handled failure message |
+
+### Database Chaos Results
+
+| Scenario | Fault status | Graceful degradation | Recovery status | Recovery time |
+| --- | --- | --- | --- | --- |
+| Home page books query | 500 | no | 200 | 13.88 ms |
+| Categories API | 200 | yes | 200 | 0.22 ms |
+| Search API | 200 | yes | 200 | 0.34 ms |
+| User interactions API | 500 | no | 200 | 0.67 ms |
+| Login lookup | 500 | no | 200 | 23.56 ms |
+| Admin rebuild DB count | 200 | yes | 200 | 4.61 ms |
+
+### Database Chaos Metrics
+
+- Fault scenarios executed: `6`
+- Graceful degradation cases: `3 / 6`
+- Successful recovery after fault removal: `6 / 6`
+- Average recovery time: `7.21 ms`
+
+### Database Chaos Analysis
+
+- The most resilient DB fault paths were `categories_api_distinct_failure`, `search_api_books_find_failure`, and `admin_rebuild_count_failure`, because the application already contained fallback behavior or handled exception responses there.
+- The weakest DB fault paths were `home_page_books_query_failure`, `user_interactions_query_failure`, and `login_user_lookup_failure`, all of which escalated to raw HTTP `500`.
+- This is exactly the kind of database-driven resilience gap the lecturer feedback pointed at: the app can recover once the DB fault disappears, but several critical flows still lack graceful DB error handling.
+
+### Database Chaos Recommendations
+
+- Add defensive handling around DB lookup failures on home, login, and interaction-history flows.
+- Convert DB connectivity failures into user-facing fallback responses instead of raw 500 pages where possible.
+- Extend future chaos testing with live MongoDB timeout simulation, not only stub-level collection failures.
+
 ## 4. Analysis
 
 The three experimental tracks complement each other:
@@ -332,6 +392,7 @@ The three experimental tracks complement each other:
 - Performance experiments show the deterministic test environment is fast and stable, with profile and recommendation flows remaining the slowest but still comfortably below a few milliseconds in the in-memory setup.
 - Mutation experiments show that validation and model rules are well protected, while recommendation ranking logic still has assertion gaps.
 - Chaos experiments show recovery is strong, but fault containment is uneven because several critical routes still surface raw 500 failures.
+- Database-focused extensions show that application correctness is not the whole story: indexing strategy, schema alignment, and graceful DB-fault handling are all material QA concerns for GoodBooks.
 
 Taken together, the experimental results indicate that GoodBooks has solid baseline robustness, but the recommendation layer remains the main engineering improvement target for the next phase.
 
@@ -353,6 +414,7 @@ venv\Scripts\python.exe scripts\experimental_database.py
 venv\Scripts\python.exe scripts\experimental_database_live.py
 venv\Scripts\python.exe scripts\experimental_mutation.py
 venv\Scripts\python.exe scripts\experimental_chaos.py
+venv\Scripts\python.exe scripts\experimental_database_chaos.py
 ```
 
 ### Evidence Index
@@ -367,6 +429,9 @@ venv\Scripts\python.exe scripts\experimental_chaos.py
 - `docs/experimental_evidence/database_live_index_results.csv`
 - `docs/experimental_evidence/database_live_results.json`
 - `docs/experimental_evidence/database_live_run.txt`
+- `docs/experimental_evidence/database_chaos_results.csv`
+- `docs/experimental_evidence/database_chaos_results.json`
+- `docs/experimental_evidence/database_chaos_run.txt`
 - `docs/experimental_evidence/performance_results.csv`
 - `docs/experimental_evidence/performance_results.json`
 - `docs/experimental_evidence/performance_run.txt`
@@ -379,6 +444,6 @@ venv\Scripts\python.exe scripts\experimental_chaos.py
 
 ### Limitations
 
-- The experiments intentionally run against deterministic in-memory collections rather than a live MongoDB server, because the assignment focuses on controlled, reproducible engineering experiments.
-- This means the reported timings are engineering baselines, not production deployment timings.
-- For a future extension, the same scripts can be paired with a live MongoDB-backed environment to compare controlled versus integrated runtime behavior.
+- The deterministic performance and original chaos experiments still use stubbed in-memory collections, so those timings remain engineering baselines rather than production deployment timings.
+- The live MongoDB experiments improve realism, but they reflect the current local dataset and index state rather than a fully production-hardened deployment.
+- The new DB chaos script injects collection-operation failures inside the application test environment; a future extension could introduce network-level Mongo outage simulation for even stronger resilience testing.

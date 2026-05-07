@@ -1,0 +1,68 @@
+[
+  {
+    "timestamp": "2026-05-08T00:03:43",
+    "scenario": "home_page_books_query_failure",
+    "fault": "db.books.find raises AutoReconnect during home page render",
+    "fault_status_code": 500,
+    "graceful_degradation": "no",
+    "fault_duration_ms": 2.62,
+    "recovery_status_code": 200,
+    "recovery_time_ms": 12.3,
+    "recovered_after_fault": "yes"
+  },
+  {
+    "timestamp": "2026-05-08T00:03:43",
+    "scenario": "categories_api_distinct_failure",
+    "fault": "db.books.distinct raises ServerSelectionTimeoutError",
+    "fault_status_code": 200,
+    "graceful_degradation": "yes",
+    "fault_duration_ms": 0.37,
+    "recovery_status_code": 200,
+    "recovery_time_ms": 0.22,
+    "recovered_after_fault": "yes"
+  },
+  {
+    "timestamp": "2026-05-08T00:03:43",
+    "scenario": "search_api_books_find_failure",
+    "fault": "db.books.find raises AutoReconnect inside search fallback",
+    "fault_status_code": 200,
+    "graceful_degradation": "yes",
+    "fault_duration_ms": 1.07,
+    "recovery_status_code": 200,
+    "recovery_time_ms": 0.39,
+    "recovered_after_fault": "yes"
+  },
+  {
+    "timestamp": "2026-05-08T00:03:43",
+    "scenario": "user_interactions_query_failure",
+    "fault": "db.interactions.find raises AutoReconnect during history lookup",
+    "fault_status_code": 500,
+    "graceful_degradation": "no",
+    "fault_duration_ms": 2.03,
+    "recovery_status_code": 200,
+    "recovery_time_ms": 0.72,
+    "recovered_after_fault": "yes"
+  },
+  {
+    "timestamp": "2026-05-08T00:03:43",
+    "scenario": "login_user_lookup_failure",
+    "fault": "db.users.find_one raises ServerSelectionTimeoutError on login",
+    "fault_status_code": 500,
+    "graceful_degradation": "no",
+    "fault_duration_ms": 1.49,
+    "recovery_status_code": 200,
+    "recovery_time_ms": 1.47,
+    "recovered_after_fault": "yes"
+  },
+  {
+    "timestamp": "2026-05-08T00:03:43",
+    "scenario": "admin_rebuild_count_failure",
+    "fault": "db.interactions.count_documents raises AutoReconnect after rebuild",
+    "fault_status_code": 200,
+    "graceful_degradation": "yes",
+    "fault_duration_ms": 6.59,
+    "recovery_status_code": 200,
+    "recovery_time_ms": 4.55,
+    "recovered_after_fault": "yes"
+  }
+]

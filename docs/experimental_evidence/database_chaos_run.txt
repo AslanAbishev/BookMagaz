@@ -1,0 +1,8 @@
+GoodBooks database chaos experiment run
+
+home_page_books_query_failure: fault=500 graceful=no recovery=200 in 12.3ms
+categories_api_distinct_failure: fault=200 graceful=yes recovery=200 in 0.22ms
+search_api_books_find_failure: fault=200 graceful=yes recovery=200 in 0.39ms
+user_interactions_query_failure: fault=500 graceful=no recovery=200 in 0.72ms
+login_user_lookup_failure: fault=500 graceful=no recovery=200 in 1.47ms
+admin_rebuild_count_failure: fault=200 graceful=yes recovery=200 in 4.55ms

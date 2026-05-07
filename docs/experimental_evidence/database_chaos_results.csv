@@ -1,0 +1,7 @@
+timestamp,scenario,fault,fault_status_code,graceful_degradation,fault_duration_ms,recovery_status_code,recovery_time_ms,recovered_after_fault
+2026-05-08T00:03:43,home_page_books_query_failure,db.books.find raises AutoReconnect during home page render,500,no,2.62,200,12.3,yes
+2026-05-08T00:03:43,categories_api_distinct_failure,db.books.distinct raises ServerSelectionTimeoutError,200,yes,0.37,200,0.22,yes
+2026-05-08T00:03:43,search_api_books_find_failure,db.books.find raises AutoReconnect inside search fallback,200,yes,1.07,200,0.39,yes
+2026-05-08T00:03:43,user_interactions_query_failure,db.interactions.find raises AutoReconnect during history lookup,500,no,2.03,200,0.72,yes
+2026-05-08T00:03:43,login_user_lookup_failure,db.users.find_one raises ServerSelectionTimeoutError on login,500,no,1.49,200,1.47,yes
+2026-05-08T00:03:43,admin_rebuild_count_failure,db.interactions.count_documents raises AutoReconnect after rebuild,200,yes,6.59,200,4.55,yes
