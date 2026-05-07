@@ -1,0 +1,9 @@
+collection,index_name,priority,present
+books,book_id_1,HIGH,yes
+books,category_1,MEDIUM,yes
+books,title_authors_text,MEDIUM,yes
+users,username_unique,CRITICAL,no
+users,email_unique,CRITICAL,no
+interactions,user_id_idx,HIGH,no
+interactions,book_id_idx,HIGH,no
+interactions,user_id_1_book_id_1,HIGH,no

@@ -1,0 +1,9 @@
+collection,index_name,priority,present,rationale
+books,title_text_authors_text,MEDIUM,yes,Supports $text search in the live catalog
+books,book_id_1,HIGH,no,Product page book lookup
+books,category_1,MEDIUM,no,Category filtering
+users,username_1,CRITICAL,no,Login and user lookup
+users,email_1,CRITICAL,no,Password reset and account recovery
+interactions,user_id_1,HIGH,no,Profile/history lookup
+interactions,book_id_1,HIGH,no,Book interaction aggregation
+interactions,user_id_1_book_id_1,HIGH,no,Repeated interaction and deduplication checks

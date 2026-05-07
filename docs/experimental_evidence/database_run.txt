@@ -1,0 +1,30 @@
+GoodBooks database-focused experimental run
+
+Integrity checks passed: 4/4
+Missing expected indexes: 5
+Slowest query: search_books_text_and_category (0.0174 ms avg)
+
+Integrity checks:
+- duplicate_usernames: PASS (No duplicate usernames found)
+- duplicate_emails: PASS (No duplicate emails found)
+- rating_range_and_type: PASS (Invalid rating count: 0)
+- orphaned_interactions: PASS (Orphaned interaction count: 0)
+
+Query benchmarks:
+- find_user_by_username: avg=0.0023 ms p95=0.0025 ms indexed=no
+- find_user_by_email: avg=0.0023 ms p95=0.0024 ms indexed=no
+- find_book_by_book_id: avg=0.0033 ms p95=0.0035 ms indexed=yes
+- find_books_by_category: avg=0.0066 ms p95=0.0068 ms indexed=yes
+- find_interactions_by_user: avg=0.0056 ms p95=0.0058 ms indexed=no
+- search_books_text_and_category: avg=0.0174 ms p95=0.0181 ms indexed=partial
+- get_popular_books: avg=0.0174 ms p95=0.0184 ms indexed=partial
+
+Index audit:
+- books.book_id_1: present=yes priority=HIGH
+- books.category_1: present=yes priority=MEDIUM
+- books.title_authors_text: present=yes priority=MEDIUM
+- users.username_unique: present=no priority=CRITICAL
+- users.email_unique: present=no priority=CRITICAL
+- interactions.user_id_idx: present=no priority=HIGH
+- interactions.book_id_idx: present=no priority=HIGH
+- interactions.user_id_1_book_id_1: present=no priority=HIGH

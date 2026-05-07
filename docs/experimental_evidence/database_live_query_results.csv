@@ -1,0 +1,8 @@
+query,avg_ms,p95_ms,max_ms,results_returned,winning_plan,note
+find_user_by_username_live,1.7034,2.9702,3.1343,1,COLLSCAN,direct login-style lookup on the live users collection
+find_user_by_email_live,0.0,0.0,0.0,0,SCHEMA_GAP,email field is absent in the live users collection
+find_book_by_book_id_live,1.2289,2.4808,2.6314,1,COLLSCAN,product-detail lookup on the live books collection
+find_books_by_category_live,0.0,0.0,0.0,0,SCHEMA_GAP,category field is absent in the live books collection
+find_interactions_by_user_live,236.5403,256.6668,324.188,50,COLLSCAN,history/profile lookup on the live interactions collection
+text_search_books_live,2.0419,3.2676,4.963,10,TEXT_MATCH,text-index-backed live catalog search
+get_popular_books_live,12.8314,13.8576,15.4279,10,COLLSCAN,sorted popularity query used by fallback and recommendation flows

@@ -1,0 +1,11 @@
+check,status,details
+collection_counts,INFO,"users=53431, books=10000, interactions=5976580"
+duplicate_usernames,PASS,No duplicate usernames found
+duplicate_emails,PASS,email-bearing users=6
+rating_range_and_type,PASS,invalid_ratings=0
+users_name_field_coverage,WARN,0.01%
+users_email_field_coverage,WARN,0.01%
+books_category_field_coverage,WARN,0.0%
+interactions_interaction_field_coverage,WARN,0.0%
+interactions_timestamp_field_coverage,WARN,0.0%
+sampled_orphaned_interactions,PASS,"sampled_user_ids=40, unmatched_sampled_user_ids=0"

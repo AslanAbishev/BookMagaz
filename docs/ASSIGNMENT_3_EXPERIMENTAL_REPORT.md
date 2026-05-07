@@ -14,6 +14,152 @@ local development environment without requiring a production MongoDB instance.
 - Experiment evidence directory:
   - `docs/experimental_evidence/`
 
+## Database-Focused Experimental Extension
+
+The lecturer feedback highlighted that a Flask + MongoDB system should not be
+evaluated only at the route level. To address this, the experimental pack was
+extended with explicit database-oriented checks for:
+
+- data integrity
+- query performance
+- index verification
+- database-specific engineering recommendations
+
+### Execution
+
+```powershell
+venv\Scripts\python.exe scripts\experimental_database.py
+```
+
+### Database Evidence
+
+- `docs/experimental_evidence/database_integrity_results.csv`
+- `docs/experimental_evidence/database_query_results.csv`
+- `docs/experimental_evidence/database_index_results.csv`
+- `docs/experimental_evidence/database_results.json`
+- `docs/experimental_evidence/database_run.txt`
+
+### Database Integrity Summary
+
+| Check | Status | Details |
+| --- | --- | --- |
+| duplicate_usernames | PASS | No duplicate usernames found |
+| duplicate_emails | PASS | No duplicate emails found |
+| rating_range_and_type | PASS | Invalid rating count: 0 |
+| orphaned_interactions | PASS | Orphaned interaction count: 0 |
+
+### Database Query Performance Summary
+
+| Query | Avg ms | P95 ms | Indexed | Note |
+| --- | ---: | ---: | --- | --- |
+| find_user_by_username | 0.0026 | 0.0029 | no | users.username unique index missing |
+| find_user_by_email | 0.0026 | 0.0027 | no | users.email unique index missing |
+| find_book_by_book_id | 0.0036 | 0.0038 | yes | book_id index present |
+| find_books_by_category | 0.0116 | 0.0164 | yes | category index present |
+| find_interactions_by_user | 0.0065 | 0.0070 | no | interactions.user_id index missing |
+| search_books_text_and_category | 0.0215 | 0.0278 | partial | application uses regex fallback rather than a pure text-index path |
+| get_popular_books | 0.0206 | 0.0334 | partial | average_rating index exists but ratings_count compound support is missing |
+
+### Database Index Audit
+
+| Collection | Expected index | Priority | Present |
+| --- | --- | --- | --- |
+| books | book_id_1 | HIGH | yes |
+| books | category_1 | MEDIUM | yes |
+| books | title_authors_text | MEDIUM | yes |
+| users | username_unique | CRITICAL | no |
+| users | email_unique | CRITICAL | no |
+| interactions | user_id_idx | HIGH | no |
+| interactions | book_id_idx | HIGH | no |
+| interactions | user_id_1_book_id_1 | HIGH | no |
+
+### Database Findings
+
+- The integrity checks passed, so the sample database model is internally consistent.
+- The slowest database-oriented operations are `search_books_text_and_category` and `get_popular_books`, which is consistent with regex-based filtering and sorting logic.
+- The most important weakness is not integrity, but missing expected indexes on `users` and `interactions`.
+- This means the application-layer tests are not enough on their own; query-path quality also depends on database indexing strategy.
+
+### Database Recommendations
+
+- Add unique indexes for `users.username` and `users.email`.
+- Add lookup indexes for `interactions.user_id`, `interactions.book_id`, and ideally a compound `(user_id, book_id)` index.
+- Replace or complement regex search with a stronger text-index-backed search path if production-scale search is required.
+- Treat database engineering as a first-class QA scope, not just a backend implementation detail.
+
+## Live MongoDB Experimental Extension
+
+To answer the database-focused feedback more directly, the assignment was also
+extended with a second experiment that runs against the actual local MongoDB
+database instead of a deterministic in-memory stub.
+
+### Execution
+
+```powershell
+venv\Scripts\python.exe scripts\experimental_database_live.py
+```
+
+### Live MongoDB Evidence
+
+- `docs/experimental_evidence/database_live_integrity_results.csv`
+- `docs/experimental_evidence/database_live_query_results.csv`
+- `docs/experimental_evidence/database_live_index_results.csv`
+- `docs/experimental_evidence/database_live_results.json`
+- `docs/experimental_evidence/database_live_run.txt`
+
+### Live Integrity and Schema Summary
+
+| Check | Status | Details |
+| --- | --- | --- |
+| duplicate_usernames | PASS | No duplicate usernames found |
+| duplicate_emails | PASS | Only 6 users currently carry an email field |
+| rating_range_and_type | PASS | Invalid rating count: 0 |
+| users_name_field_coverage | WARN | 0.01% |
+| users_email_field_coverage | WARN | 0.01% |
+| books_category_field_coverage | WARN | 0.0% |
+| interactions_interaction_field_coverage | WARN | 0.0% |
+| interactions_timestamp_field_coverage | WARN | 0.0% |
+| sampled_orphaned_interactions | PASS | sampled_user_ids=40, unmatched_sampled_user_ids=0 |
+
+### Live Query Performance Summary
+
+| Query | Avg ms | P95 ms | Plan | Note |
+| --- | ---: | ---: | --- | --- |
+| find_user_by_username_live | 2.6233 | 4.0767 | COLLSCAN | direct login-style lookup on the live users collection |
+| find_user_by_email_live | 0.0 | 0.0 | SCHEMA_GAP | email field is absent in the live users collection |
+| find_book_by_book_id_live | 2.9538 | 4.6524 | COLLSCAN | product-detail lookup on the live books collection |
+| find_books_by_category_live | 0.0 | 0.0 | SCHEMA_GAP | category field is absent in the live books collection |
+| find_interactions_by_user_live | 224.2334 | 239.8534 | COLLSCAN | history/profile lookup on the live interactions collection |
+| text_search_books_live | 3.6118 | 4.7297 | TEXT_MATCH | text-index-backed live catalog search |
+| get_popular_books_live | 12.8497 | 14.4759 | COLLSCAN | sorted popularity query used by fallback and recommendation flows |
+
+### Live Index Audit
+
+| Collection | Expected index | Priority | Present |
+| --- | --- | --- | --- |
+| books | title_text_authors_text | MEDIUM | yes |
+| books | book_id_1 | HIGH | no |
+| books | category_1 | MEDIUM | no |
+| users | username_1 | CRITICAL | no |
+| users | email_1 | CRITICAL | no |
+| interactions | user_id_1 | HIGH | no |
+| interactions | book_id_1 | HIGH | no |
+| interactions | user_id_1_book_id_1 | HIGH | no |
+
+### Live MongoDB Findings
+
+- The live database reveals a more serious engineering problem than the deterministic baseline: the current persisted schema only partially matches what the Flask application expects.
+- Login-style user lookup, product lookup, and interaction-history lookup all degrade to `COLLSCAN`, and the interaction query is especially expensive at roughly `224 ms` average.
+- The text-search path is the healthiest live query because the catalog still has a working text index.
+- Several application-facing fields that the code expects, including `email`, `category`, `interaction`, and `timestamp`, are mostly absent from the live dataset.
+
+### Live MongoDB Recommendations
+
+- Add production-grade indexes for `users.username`, `users.email`, `books.book_id`, and `interactions.user_id` as the first remediation step.
+- Align the live dataset with the current application schema by backfilling `email`, `category`, `interaction`, and `timestamp` where they are required by application logic.
+- Treat `find_interactions_by_user_live` as the highest-priority query optimization target because it impacts profile and history flows directly.
+- Keep both DB experiments in the final submission: the deterministic baseline proves reproducibility, while the live MongoDB run proves real integration risk.
+
 ## 1. Performance Testing
 
 ### Test Plan
@@ -44,19 +190,20 @@ Artifacts:
 
 | Scenario | Avg response time range | P95 range | Peak throughput | Errors |
 | --- | --- | --- | --- | --- |
-| Home page `/` | 0.50-1.20 ms | 0.60-1.50 ms | 1898.01 rps | 0 |
-| Search API | 0.21-0.23 ms | 0.25-0.33 ms | 4385.50 rps | 0 |
-| Recommend API | 0.84-1.24 ms | 1.12-1.84 ms | 1153.69 rps | 0 |
-| Product page | 0.77-1.18 ms | 0.99-1.57 ms | 1246.80 rps | 0 |
-| Profile page | 1.15-1.67 ms | 1.48-2.31 ms | 847.84 rps | 0 |
+| Home page `/` | 0.47-2.50 ms | 0.50-2.70 ms | 2012.81 rps | 0 |
+| Search API | 0.21-0.24 ms | 0.23-0.31 ms | 4479.62 rps | 0 |
+| Recommend API | 0.73-1.25 ms | 0.77-1.42 ms | 1317.21 rps | 0 |
+| Product page | 0.69-1.15 ms | 0.74-1.88 ms | 1399.86 rps | 0 |
+| Profile page | 1.03-1.51 ms | 1.27-1.88 ms | 943.39 rps | 0 |
 
 ### Analysis
 
-- The fastest scenario was `search_api`, which stayed near `0.22 ms` even at extreme load.
-- The slowest scenario was `profile_page`, which reached `1.67 ms` average and `2.31 ms` p95 under expected load.
-- `recommend_api` was the second-heaviest path, which is consistent with recommendation scoring and cache access.
+- The fastest scenario was `search_api`, which stayed near `0.21-0.24 ms` across all three load levels.
+- The highest measured average was on `home_page` under expected load at `2.50 ms`, driven by a warm-up outlier (`40.72 ms max`) rather than sustained slowdown.
+- Among the business-heavy authenticated flows, `profile_page` remained the heaviest route at `1.51 ms` average and `1.88 ms` p95 under expected load.
+- `recommend_api` was the next-heaviest backend path, which is consistent with recommendation scoring and cache access.
 - No scenario produced errors, so experimental availability under the deterministic load model was `100%`.
-- The main bottleneck candidate is profile aggregation because it combines user lookup, recommendation building, and history assembly in one request.
+- The main bottleneck candidate is still profile aggregation because it combines user lookup, recommendation building, and history assembly in one request.
 
 ### Recommendations
 
@@ -152,18 +299,18 @@ Artifacts:
 
 | Scenario | Fault status | Graceful degradation | Recovery status | Recovery time |
 | --- | --- | --- | --- | --- |
-| Search API | 500 | no | 200 | 0.54 ms |
-| Recommend API | 500 | no | 200 | 25.54 ms |
-| Product page | 500 | no | 200 | 12.86 ms |
-| Profile page | 302 | yes | 200 | 10.43 ms |
-| Admin rebuild | 200 | yes | 200 | 6.01 ms |
+| Search API | 500 | no | 200 | 0.64 ms |
+| Recommend API | 500 | no | 200 | 29.18 ms |
+| Product page | 500 | no | 200 | 32.20 ms |
+| Profile page | 302 | yes | 200 | 17.26 ms |
+| Admin rebuild | 200 | yes | 200 | 4.21 ms |
 
 ### Chaos Metrics
 
 - Fault scenarios executed: `5`
 - Graceful degradation cases: `2 / 5`
 - Successful recovery after fault removal: `5 / 5`
-- Average recovery time: `11.08 ms`
+- Average recovery time: `16.70 ms`
 
 ### Analysis
 
@@ -202,12 +349,24 @@ final paper.
 
 ```powershell
 venv\Scripts\python.exe scripts\experimental_performance.py
+venv\Scripts\python.exe scripts\experimental_database.py
+venv\Scripts\python.exe scripts\experimental_database_live.py
 venv\Scripts\python.exe scripts\experimental_mutation.py
 venv\Scripts\python.exe scripts\experimental_chaos.py
 ```
 
 ### Evidence Index
 
+- `docs/experimental_evidence/database_integrity_results.csv`
+- `docs/experimental_evidence/database_query_results.csv`
+- `docs/experimental_evidence/database_index_results.csv`
+- `docs/experimental_evidence/database_results.json`
+- `docs/experimental_evidence/database_run.txt`
+- `docs/experimental_evidence/database_live_integrity_results.csv`
+- `docs/experimental_evidence/database_live_query_results.csv`
+- `docs/experimental_evidence/database_live_index_results.csv`
+- `docs/experimental_evidence/database_live_results.json`
+- `docs/experimental_evidence/database_live_run.txt`
 - `docs/experimental_evidence/performance_results.csv`
 - `docs/experimental_evidence/performance_results.json`
 - `docs/experimental_evidence/performance_run.txt`

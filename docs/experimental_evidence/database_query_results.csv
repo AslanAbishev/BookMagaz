@@ -1,0 +1,8 @@
+query,avg_ms,p95_ms,max_ms,results_returned,indexed,note
+find_user_by_username,0.0023,0.0025,0.01,1,no,users.username unique index missing
+find_user_by_email,0.0023,0.0024,0.0052,1,no,users.email unique index missing
+find_book_by_book_id,0.0033,0.0035,0.005,1,yes,book_id index present
+find_books_by_category,0.0066,0.0068,0.0163,3,yes,category index present
+find_interactions_by_user,0.0056,0.0058,0.0079,3,no,interactions.user_id index missing
+search_books_text_and_category,0.0174,0.0181,0.0695,1,partial,application uses regex fallback rather than a pure text-index path
+get_popular_books,0.0174,0.0184,0.0316,5,partial,average_rating index exists but ratings_count compound support is missing

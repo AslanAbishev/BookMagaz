@@ -1,0 +1,5 @@
+check,status,details
+duplicate_usernames,PASS,No duplicate usernames found
+duplicate_emails,PASS,No duplicate emails found
+rating_range_and_type,PASS,Invalid rating count: 0
+orphaned_interactions,PASS,Orphaned interaction count: 0

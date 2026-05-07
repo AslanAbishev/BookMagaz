@@ -1,0 +1,37 @@
+GoodBooks live MongoDB experimental run
+
+Database: goodbooks
+Integrity checks with warnings/failures: 5/10
+Missing expected indexes: 7
+Slowest live query: find_interactions_by_user_live (236.5403 ms avg, plan=COLLSCAN)
+
+Integrity + schema checks:
+- collection_counts: INFO (users=53431, books=10000, interactions=5976580)
+- duplicate_usernames: PASS (No duplicate usernames found)
+- duplicate_emails: PASS (email-bearing users=6)
+- rating_range_and_type: PASS (invalid_ratings=0)
+- users_name_field_coverage: WARN (0.01%)
+- users_email_field_coverage: WARN (0.01%)
+- books_category_field_coverage: WARN (0.0%)
+- interactions_interaction_field_coverage: WARN (0.0%)
+- interactions_timestamp_field_coverage: WARN (0.0%)
+- sampled_orphaned_interactions: PASS (sampled_user_ids=40, unmatched_sampled_user_ids=0)
+
+Live query benchmarks:
+- find_user_by_username_live: avg=1.7034 ms p95=2.9702 ms plan=COLLSCAN
+- find_user_by_email_live: avg=0.0 ms p95=0.0 ms plan=SCHEMA_GAP
+- find_book_by_book_id_live: avg=1.2289 ms p95=2.4808 ms plan=COLLSCAN
+- find_books_by_category_live: avg=0.0 ms p95=0.0 ms plan=SCHEMA_GAP
+- find_interactions_by_user_live: avg=236.5403 ms p95=256.6668 ms plan=COLLSCAN
+- text_search_books_live: avg=2.0419 ms p95=3.2676 ms plan=TEXT_MATCH
+- get_popular_books_live: avg=12.8314 ms p95=13.8576 ms plan=COLLSCAN
+
+Live index audit:
+- books.title_text_authors_text: present=yes priority=MEDIUM
+- books.book_id_1: present=no priority=HIGH
+- books.category_1: present=no priority=MEDIUM
+- users.username_1: present=no priority=CRITICAL
+- users.email_1: present=no priority=CRITICAL
+- interactions.user_id_1: present=no priority=HIGH
+- interactions.book_id_1: present=no priority=HIGH
+- interactions.user_id_1_book_id_1: present=no priority=HIGH
