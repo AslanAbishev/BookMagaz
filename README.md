@@ -314,6 +314,53 @@ SECRET_KEY=your-secret-key-here
    - Use indexes appropriately
    - Pagination for large datasets
 
+## Neural Network Recommender Extension
+
+The project now includes a neural/NLP recommendation layer for the neural networks course topic "Recommendation System".
+
+Implemented in `backend/neural_recommend.py`:
+- User and book latent embeddings trained from rating interactions.
+- Small Neural Collaborative Filtering hidden layer for user-book affinity scoring.
+- NLP book text embeddings from title, author, category, and description.
+- Training loss curve plus train/validation RMSE and MAE.
+- Hybrid ranking with user-item embedding score, NLP content similarity, and popularity prior.
+- Preference analysis from ratings, likes, purchases, and views.
+
+New endpoints:
+- `GET /api/neural/recommend/<user_id>?limit=10`
+- `GET /api/neural/preferences/<user_id>`
+- `GET /api/neural/model-card`
+- `GET /admin/rebuild-neural`
+
+Run focused validation:
+
+```powershell
+venv\Scripts\python.exe -m pytest tests\test_neural_recommend.py tests\test_api.py -q
+venv\Scripts\python.exe scripts\build_neural_recommender.py
+```
+
+For a faster demo rebuild:
+
+```powershell
+$env:NEURAL_EPOCHS="10"
+$env:NEURAL_MAX_EVENTS="2000"
+$env:NEURAL_BATCH_SIZE="2048"
+venv\Scripts\python.exe scripts\build_neural_recommender.py
+```
+
+Optional full GPU training with PyTorch/CUDA:
+
+```powershell
+venv\Scripts\python.exe -m pip install torch --index-url https://download.pytorch.org/whl/cu128
+$env:NEURAL_EPOCHS="10"
+$env:NEURAL_MAX_EVENTS="500000"
+$env:NEURAL_BATCH_SIZE="8192"
+$env:NEURAL_HIDDEN_DIM="64"
+$env:NEURAL_RANKING_USERS="1000"
+$env:NEURAL_RANKING_NEGATIVES="99"
+venv\Scripts\python.exe scripts\train_neural_recommender_torch.py
+```
+
 ## 🐛 Troubleshooting
 
 **Issue: MongoDB connection error**

@@ -20,6 +20,9 @@
 <div class="profile-section">
     <h2 class="section-title">✨ Personalized Recommendations</h2>
     <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+        <strong>Runtime:</strong> this page is powered by the neural recommender used by
+        <code>/api/neural/recommend</code>.
+        <br>
         Based on your ratings and interactions, here are books we think you'll enjoy:
         <br><small style="font-size: 0.85rem;">
             <strong>How it works:</strong> The system finds books similar to ones you've rated highly. 
@@ -48,7 +51,16 @@
             <div class="book-info">
                 <h3 class="book-title">{{ rec.title or 'Untitled' }}</h3>
                 <p class="book-author">{{ rec.authors or 'Unknown Author' }}</p>
-                {% if rec.get('score') %}
+                {% if rec.get('neural_score') %}
+                <p style="font-size: 0.8rem; color: var(--success-color); margin-top: 0.5rem;">
+                    Neural Score: {{ rec.neural_score }}
+                </p>
+                {% if rec.get('reason') %}
+                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.35rem;">
+                    {{ rec.reason }}
+                </p>
+                {% endif %}
+                {% elif rec.get('score') %}
                 <p style="font-size: 0.8rem; color: var(--success-color); margin-top: 0.5rem;">
                     Match Score: {{ rec.score }}
                 </p>

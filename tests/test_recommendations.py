@@ -59,8 +59,10 @@ class TestRecommendations:
         )
         monkeypatch.setattr(
             app_module,
-            "get_recommendations",
-            lambda passed_user_id, db: [{"book_id": 2, "score": 4.2}],
+            "get_neural_recommendations",
+            lambda passed_user_id, db, limit=10, include_model_info=False: [
+                {"book_id": 2, "title": "Book 2", "authors": "Author", "neural_score": 0.91}
+            ],
         )
         monkeypatch.setattr(
             app_module,

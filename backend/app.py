@@ -3,6 +3,13 @@ from flask import url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import MongoClient
 from recommend import get_recommendations, get_similar_books
+from neural_recommend import (
+    analyze_user_preferences,
+    build_neural_recommender,
+    get_neural_model_card,
+    get_neural_recommendations,
+    get_neural_status,
+)
 from models import (
     get_user_by_username, create_user, insert_interaction, get_book, search_books,
     get_user_interactions, get_user_purchase_history, get_user_ratings,
@@ -248,7 +255,7 @@ def profile():
         session.clear()
         return redirect(url_for("login"))
 
-    recs = get_recommendations(user_id, db)
+    recs = get_neural_recommendations(user_id, db, limit=10, include_model_info=True)
     purchase_history = get_user_purchase_history(db, user_id)
     ratings = get_user_ratings(db, user_id)
     likes = get_user_interactions(db, user_id, "like")
@@ -274,14 +281,19 @@ def profile():
                 "rated_at": rating.get("timestamp")
             })
     
-    # Get full book details for recommendations (already includes book_id from updated recommend.py)
+    # Neural recommendations already include book details, scores, reasons, and model metadata.
     rec_books = []
     for rec in recs:
-        if rec.get("book_id"):
+        if rec.get("title") and rec.get("authors"):
+            rec_books.append(rec)
+        elif rec.get("book_id"):
             book = get_book(db, rec.get("book_id"))
             if book:
-                # Add recommendation score if available
                 book["score"] = rec.get("score")
+                book["neural_score"] = rec.get("neural_score")
+                book["reason"] = rec.get("reason")
+                book["score_components"] = rec.get("score_components")
+                book["model_info"] = rec.get("model_info")
                 rec_books.append(book)
         elif rec.get("title"):  # Fallback if only title/author in rec
             rec_books.append(rec)
@@ -487,6 +499,38 @@ def api_recommend(user_id):
     return jsonify(recs)
 
 
+@app.get("/api/neural/recommend/<user_id>")
+def api_neural_recommend(user_id):
+    """Get neural/NLP hybrid recommendations for a user."""
+    limit = int(request.args.get("limit", 10))
+    include_model_info = request.args.get("debug", "").lower() in {"1", "true", "yes"}
+    recs = get_neural_recommendations(user_id, db, limit=limit, include_model_info=include_model_info)
+    return jsonify(recs)
+
+
+@app.get("/api/neural/preferences/<user_id>")
+def api_neural_preferences(user_id):
+    """Analyze the user's preference profile from stored interactions."""
+    if "user_id" not in session:
+        return jsonify({"error": "Not authenticated"}), 401
+    if str(session["user_id"]) != str(user_id):
+        return jsonify({"error": "Forbidden"}), 403
+
+    return jsonify(analyze_user_preferences(user_id, db))
+
+
+@app.get("/api/neural/model-card")
+def api_neural_model_card():
+    """Return architecture, training, and evaluation metadata for the neural model."""
+    return jsonify(get_neural_model_card(db))
+
+
+@app.get("/api/neural/status")
+def api_neural_status():
+    """Return the exact model artifacts currently loaded by the Flask app."""
+    return jsonify(get_neural_status(db))
+
+
 @app.get("/api/categories")
 def api_categories():
     """Get all categories"""
@@ -537,6 +581,37 @@ def admin_rebuild_sim():
         return f"Similarity matrix rebuilt successfully!<br>Using {rating_count} ratings from the database."
     except Exception as e:
         return f"Error rebuilding similarity matrix: {str(e)}"
+
+
+@app.get("/admin/rebuild-neural")
+def admin_rebuild_neural():
+    """Rebuild neural user/book embeddings and NLP book embeddings."""
+    try:
+        epochs = int(request.args.get("epochs", 20))
+        max_events = int(request.args.get("max_events", 5000))
+        batch_size = int(request.args.get("batch_size", 2048))
+        summary = build_neural_recommender(
+            db,
+            force_rebuild=True,
+            epochs=epochs,
+            max_training_events=max_events,
+            batch_size=batch_size,
+        )
+        return (
+            "Neural recommender rebuilt successfully!<br>"
+            f"Epochs: {summary['epochs']}<br>"
+            f"Max training events: {summary['max_training_events']}<br>"
+            f"Batch size: {summary['batch_size']}<br>"
+            f"Book text embeddings: {summary['book_embeddings']}<br>"
+            f"Latent users: {summary['latent_users']}<br>"
+            f"Latent books: {summary['latent_books']}<br>"
+            f"Training events: {summary['training_events']}<br>"
+            f"Validation RMSE: {summary['validation_rmse']}<br>"
+            f"Validation MAE: {summary['validation_mae']}<br>"
+            f"NLP method: {summary['text_embedding_method']}"
+        )
+    except Exception as e:
+        return f"Error rebuilding neural recommender: {str(e)}", 500
 
 
 if __name__ == "__main__":

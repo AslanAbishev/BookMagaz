@@ -260,6 +260,99 @@ class TestCategoriesAPI:
         assert isinstance(data, list)
 
 
+class TestNeuralRecommendationAPI:
+    """Neural recommender and preference analysis API tests."""
+
+    def test_neural_recommend_endpoint_returns_payload(self, client, monkeypatch):
+        """Neural recommendation endpoint exposes the hybrid model output."""
+        captured = {}
+
+        def fake_neural_recommendations(user_id, db, limit=10, include_model_info=False):
+            captured["user_id"] = user_id
+            captured["limit"] = limit
+            captured["include_model_info"] = include_model_info
+            return [{"book_id": 2, "title": "Neural Recommender Systems", "neural_score": 0.91}]
+
+        monkeypatch.setattr(app_module, "get_neural_recommendations", fake_neural_recommendations)
+
+        rv = client.get("/api/neural/recommend/u-1?limit=3")
+
+        assert rv.status_code == 200
+        assert captured == {"user_id": "u-1", "limit": 3, "include_model_info": False}
+        assert rv.get_json()[0]["neural_score"] == 0.91
+
+    def test_neural_preferences_requires_authentication(self, client):
+        """Preference profiles are protected because they expose personal signals."""
+        rv = client.get("/api/neural/preferences/u-1")
+
+        assert rv.status_code == 401
+        assert rv.get_json()["error"] == "Not authenticated"
+
+    def test_neural_preferences_rejects_other_user(self, client):
+        """Users cannot fetch another user's neural preference profile."""
+        with client.session_transaction() as session:
+            session["user_id"] = "u-1"
+
+        rv = client.get("/api/neural/preferences/u-2")
+
+        assert rv.status_code == 403
+        assert rv.get_json()["error"] == "Forbidden"
+
+    def test_neural_preferences_returns_authenticated_profile(self, client, monkeypatch):
+        """Authenticated users can fetch their own preference analysis."""
+        monkeypatch.setattr(
+            app_module,
+            "analyze_user_preferences",
+            lambda user_id, db: {
+                "user_id": user_id,
+                "signals_count": 2,
+                "top_categories": [{"name": "AI", "weight": 1.0}],
+            },
+        )
+
+        with client.session_transaction() as session:
+            session["user_id"] = "u-1"
+
+        rv = client.get("/api/neural/preferences/u-1")
+
+        assert rv.status_code == 200
+        assert rv.get_json()["top_categories"][0]["name"] == "AI"
+
+    def test_neural_model_card_returns_training_metadata(self, client, monkeypatch):
+        """Model card endpoint explains architecture and evaluation metrics."""
+        monkeypatch.setattr(
+            app_module,
+            "get_neural_model_card",
+            lambda db: {
+                "project_topic": "Recommendation System",
+                "architecture": {"model_type": "neural_collaborative_filtering"},
+                "training": {"validation_rmse": 0.18},
+            },
+        )
+
+        rv = client.get("/api/neural/model-card")
+
+        assert rv.status_code == 200
+        assert rv.get_json()["architecture"]["model_type"] == "neural_collaborative_filtering"
+
+    def test_neural_status_returns_runtime_artifacts(self, client, monkeypatch):
+        """Status endpoint proves which neural artifacts the app is using."""
+        monkeypatch.setattr(
+            app_module,
+            "get_neural_status",
+            lambda db: {
+                "status": "ready",
+                "model": {"model_type": "neural_collaborative_filtering_pytorch"},
+                "text_embeddings": {"book_embeddings": 10000},
+            },
+        )
+
+        rv = client.get("/api/neural/status")
+
+        assert rv.status_code == 200
+        assert rv.get_json()["status"] == "ready"
+
+
 class TestInteractionAPI:
     """Interaction and user-state endpoints."""
 
